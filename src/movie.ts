@@ -379,11 +379,11 @@ export class Movie implements IMovie {
 
     // for the first audio output stream (mapped from the selected audio input stream)
     mkvOutputArguments.push(
-      // transcode to AAC at 128k bitrate
+      // transcode to AAC at 256k bitrate
       "-codec:a:0",
       "aac",
       "-b:a:0",
-      "128k",
+      "256k",
 
       // downmix to 2.0
       "-ac:a:0",

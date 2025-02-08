@@ -6,7 +6,8 @@ export class Config {
     public readonly ffmpegBinaryPath: string,
     public readonly ffprobeBinaryPath: string,
     public readonly outputFolderPath: string,
-    public readonly movies: readonly IMovie[]
+    public readonly movies: readonly IMovie[],
+    public readonly dryRun: boolean
   ) {}
 
   public static parseFromFile(configFilePath: string): Config {
@@ -14,6 +15,22 @@ export class Config {
       encoding: "utf-8",
     });
     return Config.parse(configFileContents);
+  }
+
+  public static getExampleConfig(): Config {
+    return {
+      ffmpegBinaryPath: "/usr/local/bin/ffmpeg",
+      ffprobeBinaryPath: "/usr/local/bin/ffprobe",
+      outputFolderPath: "./converted",
+      movies: [
+        {
+          title: "The Matrix",
+          year: 1999,
+          inputFilePath: "./downloaded/The Matrix (1999)/The Matrix (1999).mkv",
+        },
+      ],
+      dryRun: false,
+    };
   }
 
   private static parse(configString: string): Config {
@@ -79,6 +96,10 @@ export class Config {
           .map((movie) => movie.title)
           .join("\n")}`
       );
+    }
+
+    if (typeof config.dryRun !== "boolean") {
+      throw new Error("config.dryRun is invalid");
     }
 
     return config;

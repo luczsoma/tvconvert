@@ -1,7 +1,6 @@
 import { writeFileSync } from "node:fs";
 import { argv, exit } from "node:process";
 import { Config } from "./config";
-import { EXAMPLE_CONFIG } from "./exampleConfig";
 import { Movie } from "./movie";
 
 function printHelp(): void {
@@ -31,7 +30,7 @@ async function main() {
   if (["-p", "--print-config"].some((m) => m === mode)) {
     writeFileSync(
       configFilePath,
-      `${JSON.stringify(EXAMPLE_CONFIG, null, 2)}\n`
+      `${JSON.stringify(Config.getExampleConfig(), null, 2)}\n`
     );
     return 0;
   }
@@ -55,9 +54,14 @@ async function main() {
     await movie.convert(
       config.outputFolderPath,
       config.ffmpegBinaryPath,
+      config.dryRun,
       ++currentFileIndex,
       movies.length
     );
+  }
+
+  if (config.dryRun) {
+    return 0;
   }
 
   const moviesWithConversionError = movies.filter(

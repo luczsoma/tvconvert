@@ -112,6 +112,7 @@ export class Movie implements IMovie {
   public async convert(
     outputFolderPath: string,
     ffmpegBinaryPath: string,
+    dryRun: boolean,
     currentFileIndex: number,
     allFilesCount: number
   ): Promise<void> {
@@ -143,6 +144,11 @@ export class Movie implements IMovie {
       ...inputFileArguments,
       ...outputsArguments.flat(),
     ];
+
+    if (dryRun) {
+      console.log(`${ffmpegBinaryPath} ${ffmpegArguments.join(" ")}`);
+      return;
+    }
 
     mkdirSync(
       this.getOutputSubfolderPath(

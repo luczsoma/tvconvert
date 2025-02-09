@@ -1,7 +1,6 @@
 import { spawn, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
-import { currentYear } from "./currentYear";
 import {
   convertFfprobeDispositionMapToDispositionListWithoutDefault,
   FfProbeOutput,
@@ -85,7 +84,7 @@ export class Movie implements IMovie {
       typeof this.year === "number" &&
       // Roundhay Garden Scene from 1888 is believed to be the oldest surviving film
       this.year >= 1888 &&
-      this.year <= currentYear
+      this.year <= new Date().getFullYear()
     );
   }
 

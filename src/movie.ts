@@ -63,7 +63,7 @@ export class Movie implements IMovie {
   public getFullyQualifiedName(fileNameSafe: boolean): string {
     let title = this.title;
     if (fileNameSafe) {
-      title = title.replace(/[^a-zA-Z0-9-_ ]/g, "");
+      title = title.replace(/[^a-zA-Z0-9-_{} ]/g, "");
     }
     const fullyQualifiedName = `${title} (${this.year})`;
     return fullyQualifiedName;

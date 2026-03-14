@@ -383,15 +383,21 @@ export class Movie implements IMovie {
 
     // for the first audio output stream (mapped from the selected audio input stream)
     mkvOutputArguments.push(
-      // transcode to AAC at 256k bitrate
+      // transcode to AAC (48kHz, 256kbps)
       "-codec:a:0",
       "aac",
+      "-ar:a:0",
+      "48000",
       "-b:a:0",
       "256k",
 
       // downmix to 2.0
       "-ac:a:0",
       "2",
+
+      // apply the loudnorm filter with lra = 10
+      "-filter:a:0",
+      "loudnorm=lra=10",
 
       ...this.getStreamMetadataArguments(
         "a:0",
@@ -448,8 +454,8 @@ export class Movie implements IMovie {
     mkvOutputArguments.push(
       this.getMkvOutputFilePath(
         outputFolderPath,
-        conversionInfo.selectedSubtitleStream
-      )
+        conversionInfo.selectedSubtitleStream,
+      ),
     );
 
     return mkvOutputArguments;

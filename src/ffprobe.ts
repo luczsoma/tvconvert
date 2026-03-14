@@ -29,10 +29,10 @@ export interface FfprobeDispositionMap {
 }
 
 export function convertFfprobeDispositionMapToDispositionListWithoutDefault(
-  ffprobeDispositionMap: FfprobeDispositionMap
+  ffprobeDispositionMap: FfprobeDispositionMap,
 ): readonly string[] {
   return Object.keys(ffprobeDispositionMap).filter(
     (disposition) =>
-      disposition !== "default" && ffprobeDispositionMap[disposition] === 1
+      disposition !== "default" && ffprobeDispositionMap[disposition] === 1,
   );
 }

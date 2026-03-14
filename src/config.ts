@@ -7,7 +7,7 @@ export class Config {
     public readonly ffprobeBinaryPath: string,
     public readonly outputFolderPath: string,
     public readonly movies: readonly IMovie[],
-    public readonly dryRun: boolean
+    public readonly dryRun: boolean,
   ) {}
 
   public static parseFromFile(configFilePath: string): Config {
@@ -62,39 +62,39 @@ export class Config {
     }
 
     const movies = (config.movies as readonly IMovie[]).map((movie) =>
-      Movie.fromIMovie(movie)
+      Movie.fromIMovie(movie),
     );
 
     const moviesWithInvalidInputFilePaths = movies.filter(
-      (movie) => !movie.hasValidInputFilePath()
+      (movie) => !movie.hasValidInputFilePath(),
     );
     if (moviesWithInvalidInputFilePaths.length > 0) {
       throw new Error(
         `The following input files do not exist:\n${moviesWithInvalidInputFilePaths
           .map((movie) => movie.inputFilePath)
-          .join("\n")}`
+          .join("\n")}`,
       );
     }
 
     const moviesWithInvalidTitles = movies.filter(
-      (movie) => !movie.hasValidTitle()
+      (movie) => !movie.hasValidTitle(),
     );
     if (moviesWithInvalidTitles.length > 0) {
       throw new Error(
         `The following movie titles are invalid:\n${moviesWithInvalidTitles
           .map((movie) => movie.title)
-          .join("\n")}`
+          .join("\n")}`,
       );
     }
 
     const moviesWithInvalidYears = movies.filter(
-      (movie) => !movie.hasValidYear()
+      (movie) => !movie.hasValidYear(),
     );
     if (moviesWithInvalidYears.length > 0) {
       throw new Error(
         `The following movies' years are invalid:\n${moviesWithInvalidYears
           .map((movie) => movie.title)
-          .join("\n")}`
+          .join("\n")}`,
       );
     }
 

@@ -30,7 +30,7 @@ async function main() {
   if (["-p", "--print-config"].some((m) => m === mode)) {
     writeFileSync(
       configFilePath,
-      `${JSON.stringify(Config.getExampleConfig(), null, 2)}\n`
+      `${JSON.stringify(Config.getExampleConfig(), null, 2)}\n`,
     );
     return 0;
   }
@@ -56,7 +56,7 @@ async function main() {
       config.ffmpegBinaryPath,
       config.dryRun,
       ++currentFileIndex,
-      movies.length
+      movies.length,
     );
   }
 
@@ -65,14 +65,14 @@ async function main() {
   }
 
   const moviesWithConversionError = movies.filter(
-    (movie) => !movie.getConversionResult().successful
+    (movie) => !movie.getConversionResult().successful,
   );
   if (moviesWithConversionError.length > 0) {
     for (const movie of moviesWithConversionError) {
       console.log(
         `\n${movie.getFullyQualifiedName(false)}\n${
           movie.getConversionResult().stderr
-        }`
+        }`,
       );
     }
     console.log(`\nFINISHED WITH ${moviesWithConversionError.length} ERRORS`);

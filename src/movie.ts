@@ -57,7 +57,7 @@ export class Movie implements IMovie {
   private constructor(
     public readonly title: string,
     public readonly year: number,
-    public readonly inputFilePath: string
+    public readonly inputFilePath: string,
   ) {}
 
   public getFullyQualifiedName(fileNameSafe: boolean): string {
@@ -95,9 +95,8 @@ export class Movie implements IMovie {
       this.getInputFileMediaInfo(this.inputFilePath, ffprobeBinaryPath);
 
     const selectedAudioStream = await this.selectAudioStream(audioStreams);
-    const selectedSubtitleStream = await this.selectSubtitleStream(
-      subtitleStreams
-    );
+    const selectedSubtitleStream =
+      await this.selectSubtitleStream(subtitleStreams);
 
     this.conversionInfo = {
       containerDurationSeconds,
@@ -113,11 +112,11 @@ export class Movie implements IMovie {
     ffmpegBinaryPath: string,
     dryRun: boolean,
     currentFileIndex: number,
-    allFilesCount: number
+    allFilesCount: number,
   ): Promise<void> {
     if (this.conversionInfo === undefined) {
       throw new Error(
-        "AssertError: must call collectConversionInfo() before convert()"
+        "AssertError: must call collectConversionInfo() before convert()",
       );
     }
 
@@ -152,11 +151,11 @@ export class Movie implements IMovie {
     mkdirSync(
       this.getOutputSubfolderPath(
         outputFolderPath,
-        this.conversionInfo.selectedSubtitleStream
+        this.conversionInfo.selectedSubtitleStream,
       ),
       {
         recursive: true,
-      }
+      },
     );
 
     const { containerDurationSeconds } = this.conversionInfo;
@@ -184,7 +183,7 @@ export class Movie implements IMovie {
             currentFileIndex,
             allFilesCount,
             roundedProgressPercentage,
-            speed
+            speed,
           );
         }
       });
@@ -214,20 +213,20 @@ export class Movie implements IMovie {
 
   private getOutputSubfolderPath(
     outputFolderPath: string,
-    selectedSubtitleStream: SubtitleStream | null
+    selectedSubtitleStream: SubtitleStream | null,
   ): string {
     const outputSubfolderName =
       selectedSubtitleStream === null ? "external_subtitle_needed" : "ready";
     return join(
       outputFolderPath,
       outputSubfolderName,
-      this.getFullyQualifiedName(true)
+      this.getFullyQualifiedName(true),
     );
   }
 
   private getInputFileMediaInfo(
     inputFilePath: string,
-    ffprobeBinary: string
+    ffprobeBinary: string,
   ): ContainerInfo {
     const { stdout } = spawnSync(
       ffprobeBinary,
@@ -243,7 +242,7 @@ export class Movie implements IMovie {
       ],
       {
         encoding: "utf8",
-      }
+      },
     );
 
     const ffprobeOutput: FfProbeOutput = JSON.parse(stdout);
@@ -257,7 +256,7 @@ export class Movie implements IMovie {
         title: s.tags?.["title"],
         dispositionsWithoutDefault:
           convertFfprobeDispositionMapToDispositionListWithoutDefault(
-            s.disposition
+            s.disposition,
           ),
         channelLayout: s.channel_layout,
       }));
@@ -271,7 +270,7 @@ export class Movie implements IMovie {
         title: s.tags?.["title"],
         dispositionsWithoutDefault:
           convertFfprobeDispositionMapToDispositionListWithoutDefault(
-            s.disposition
+            s.disposition,
           ),
       }));
 
@@ -283,7 +282,7 @@ export class Movie implements IMovie {
   }
 
   private async selectAudioStream(
-    audioStreams: readonly AudioStream[]
+    audioStreams: readonly AudioStream[],
   ): Promise<AudioStream> {
     console.table(
       audioStreams.map((stream) => ({
@@ -292,19 +291,19 @@ export class Movie implements IMovie {
         Codec: stream.codecName,
         "Channel layout": stream.channelLayout,
         Title: stream.title ?? "",
-      }))
+      })),
     );
 
     while (true) {
       const audioStreamSelectionAnswer = await question(
-        "Select audio stream index: "
+        "Select audio stream index: ",
       );
       const audioStreamIndexCandidate = Number.parseInt(
         audioStreamSelectionAnswer,
-        10
+        10,
       );
       const selectedAudioStream = audioStreams.find(
-        (audioStream) => audioStream.index === audioStreamIndexCandidate
+        (audioStream) => audioStream.index === audioStreamIndexCandidate,
       );
       if (selectedAudioStream !== undefined) {
         return selectedAudioStream;
@@ -313,7 +312,7 @@ export class Movie implements IMovie {
   }
 
   private async selectSubtitleStream(
-    subtitleStreams: readonly SubtitleStream[]
+    subtitleStreams: readonly SubtitleStream[],
   ): Promise<SubtitleStream | null> {
     console.table(
       subtitleStreams
@@ -322,23 +321,23 @@ export class Movie implements IMovie {
           Index: stream.index,
           Language: stream.language,
           Title: stream.title ?? "",
-        }))
+        })),
     );
 
     while (true) {
       const subtitleStreamSelectionAnswer = await question(
-        "Select subtitle stream index (leave empty if using external subtitles): "
+        "Select subtitle stream index (leave empty if using external subtitles): ",
       );
       if (subtitleStreamSelectionAnswer === "") {
         return null;
       }
       const subtitleStreamIndexCandidate = Number.parseInt(
         subtitleStreamSelectionAnswer,
-        10
+        10,
       );
       const selectedSubtitleStream = subtitleStreams.find(
         (subtitleStream) =>
-          subtitleStream.index === subtitleStreamIndexCandidate
+          subtitleStream.index === subtitleStreamIndexCandidate,
       );
       if (selectedSubtitleStream !== undefined) {
         return selectedSubtitleStream;
@@ -348,7 +347,7 @@ export class Movie implements IMovie {
 
   private getMkvOutputArguments(
     outputFolderPath: string,
-    conversionInfo: ConversionInfo
+    conversionInfo: ConversionInfo,
   ): readonly string[] {
     const mkvOutputArguments = [
       // do not transcode any streams unless explicitly specified
@@ -399,14 +398,14 @@ export class Movie implements IMovie {
         conversionInfo.selectedAudioStream.language,
         "aac",
         undefined,
-        "stereo"
+        "stereo",
       ),
 
       ...this.getStreamDispositionArguments(
         "a:0",
         conversionInfo.selectedAudioStream.dispositionsWithoutDefault,
-        true
-      )
+        true,
+      ),
     );
 
     // for all other audio output streams
@@ -417,14 +416,14 @@ export class Movie implements IMovie {
           audioStream.language,
           audioStream.codecName,
           audioStream.title,
-          audioStream.channelLayout
+          audioStream.channelLayout,
         ),
 
         ...this.getStreamDispositionArguments(
           `a:${i + 1}`,
           audioStream.dispositionsWithoutDefault,
-          false
-        )
+          false,
+        ),
       );
     });
 
@@ -435,14 +434,14 @@ export class Movie implements IMovie {
           `s:${i}`,
           subtitleStream.language,
           subtitleStream.codecName,
-          subtitleStream.title
+          subtitleStream.title,
         ),
 
         ...this.getStreamDispositionArguments(
           `s:${i}`,
           subtitleStream.dispositionsWithoutDefault,
-          false
-        )
+          false,
+        ),
       );
     });
 
@@ -458,7 +457,7 @@ export class Movie implements IMovie {
 
   private getSrtOutputArguments(
     outputFolderPath: string,
-    conversionInfo: ConversionInfo
+    conversionInfo: ConversionInfo,
   ): readonly string[] {
     // do not produce an srt output if there is no selected subtitle stream
     if (conversionInfo.selectedSubtitleStream === null) {
@@ -470,7 +469,7 @@ export class Movie implements IMovie {
       `0:${conversionInfo.selectedSubtitleStream.index}`,
       this.getSrtOutputFilePath(
         outputFolderPath,
-        conversionInfo.selectedSubtitleStream
+        conversionInfo.selectedSubtitleStream,
       ),
     ];
   }
@@ -479,22 +478,22 @@ export class Movie implements IMovie {
     currentFileIndex: number,
     allFilesCount: number,
     progressPercentageRounded: string,
-    speed: number
+    speed: number,
   ) {
     console.log(
       `[${currentFileIndex} / ${allFilesCount}] ${this.getFullyQualifiedName(
-        false
-      )} [${progressPercentageRounded}% at ${speed}]`
+        false,
+      )} [${progressPercentageRounded}% at ${speed}]`,
     );
   }
 
   private getMkvOutputFilePath(
     outputFolderPath: string,
-    selectedSubtitleStream: SubtitleStream | null
+    selectedSubtitleStream: SubtitleStream | null,
   ): string {
     const outputSubfolderPath = this.getOutputSubfolderPath(
       outputFolderPath,
-      selectedSubtitleStream
+      selectedSubtitleStream,
     );
     const outputFileName = `${this.getFullyQualifiedName(true)}.mkv`;
     return join(outputSubfolderPath, outputFileName);
@@ -502,11 +501,11 @@ export class Movie implements IMovie {
 
   private getSrtOutputFilePath(
     outputFolderPath: string,
-    selectedSubtitleStream: SubtitleStream
+    selectedSubtitleStream: SubtitleStream,
   ): string {
     const outputSubfolderPath = this.getOutputSubfolderPath(
       outputFolderPath,
-      selectedSubtitleStream
+      selectedSubtitleStream,
     );
     const outputFileName = [
       this.getFullyQualifiedName(true),
@@ -521,7 +520,7 @@ export class Movie implements IMovie {
     language: string | undefined,
     codecName: string,
     originalTitle: string | undefined,
-    channelLayout?: string | undefined
+    channelLayout?: string | undefined,
   ): readonly string[] {
     let ret = [
       // set title
@@ -530,7 +529,7 @@ export class Movie implements IMovie {
         language,
         codecName,
         originalTitle,
-        channelLayout
+        channelLayout,
       )}`,
     ];
 
@@ -546,7 +545,7 @@ export class Movie implements IMovie {
     language: string | undefined,
     codecName: string,
     originalTitle: string | undefined,
-    channelLayout?: string | undefined
+    channelLayout?: string | undefined,
   ): string {
     let lang = language ?? "???";
     let ret = `${lang} ${codecName}`;
@@ -562,11 +561,11 @@ export class Movie implements IMovie {
   private getStreamDispositionArguments(
     streamSpecifier: string,
     dispositionsWithoutDefault: readonly string[],
-    isDefault: boolean
+    isDefault: boolean,
   ): readonly string[] {
     const disposition = this.getDisposition(
       dispositionsWithoutDefault,
-      isDefault
+      isDefault,
     );
     if (disposition === "") {
       return [];
@@ -576,7 +575,7 @@ export class Movie implements IMovie {
 
   private getDisposition(
     dispositionsWithoutDefault: readonly string[],
-    isDefault: boolean
+    isDefault: boolean,
   ): string {
     let ret = [...dispositionsWithoutDefault];
 

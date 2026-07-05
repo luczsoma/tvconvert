@@ -1,7 +1,7 @@
 import { writeFileSync } from "node:fs";
 import { argv, exit } from "node:process";
-import { Config } from "./config";
-import { Movie } from "./movie";
+import { Config } from "./config.js";
+import { Movie } from "./movie.js";
 
 function printHelp(): void {
   console.log("Read config from {configfile}.json:");

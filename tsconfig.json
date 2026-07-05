@@ -2,6 +2,11 @@
   "files": ["./src/tvconvert.ts"],
   "compilerOptions": {
     "outDir": "./build",
+    "rootDir": "./src",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "verbatimModuleSyntax": true,
+    "types": ["node"],
 
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
@@ -11,8 +16,10 @@
     "noImplicitReturns": true,
     "noPropertyAccessFromIndexSignature": true,
     "noUncheckedIndexedAccess": true,
+    "noUncheckedSideEffectImports": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "strict": true
+    "strict": true,
+    "strictBuiltinIteratorReturn": true
   }
 }

@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from "node:fs";
-import { IMovie, Movie } from "./movie";
+import { type IMovie, Movie } from "./movie.js";
 
 export class Config {
   private constructor(

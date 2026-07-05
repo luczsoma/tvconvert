@@ -3,9 +3,9 @@ import { existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import {
   convertFfprobeDispositionMapToDispositionListWithoutDefault,
-  FfProbeOutput,
-} from "./ffprobe";
-import { question } from "./utils";
+  type FfProbeOutput,
+} from "./ffprobe.js";
+import { question } from "./utils.js";
 
 interface Stream {
   readonly index: number;

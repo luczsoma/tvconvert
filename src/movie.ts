@@ -23,12 +23,14 @@ interface SubtitleStream extends Stream {}
 
 interface ContainerInfo {
   readonly containerDurationSeconds: number;
+  readonly frameCountedVideoStreamFrameRate: number;
   readonly audioStreams: readonly AudioStream[];
   readonly subtitleStreams: readonly SubtitleStream[];
 }
 
 interface ConversionInfo {
-  readonly containerDurationSeconds: number;
+  readonly frameCountedVideoStreamFrameRate: number;
+  readonly frameCountedVideoStreamEstimatedTotalFrames: number;
   readonly audioStreams: readonly AudioStream[];
   readonly selectedAudioStream: AudioStream;
   readonly subtitleStreams: readonly SubtitleStream[];
@@ -91,15 +93,23 @@ export class Movie implements IMovie {
   public async collectConversionInfo(ffprobeBinaryPath: string): Promise<void> {
     console.log(`Collecting info for: ${this.getFullyQualifiedName(false)}…`);
 
-    const { containerDurationSeconds, audioStreams, subtitleStreams } =
-      this.getInputFileMediaInfo(this.inputFilePath, ffprobeBinaryPath);
+    const {
+      containerDurationSeconds,
+      frameCountedVideoStreamFrameRate,
+      audioStreams,
+      subtitleStreams,
+    } = this.getInputFileMediaInfo(this.inputFilePath, ffprobeBinaryPath);
+
+    const frameCountedVideoStreamEstimatedTotalFrames =
+      containerDurationSeconds * frameCountedVideoStreamFrameRate;
 
     const selectedAudioStream = await this.selectAudioStream(audioStreams);
     const selectedSubtitleStream =
       await this.selectSubtitleStream(subtitleStreams);
 
     this.conversionInfo = {
-      containerDurationSeconds,
+      frameCountedVideoStreamEstimatedTotalFrames,
+      frameCountedVideoStreamFrameRate,
       audioStreams,
       selectedAudioStream,
       subtitleStreams,
@@ -158,34 +168,55 @@ export class Movie implements IMovie {
       },
     );
 
-    const { containerDurationSeconds } = this.conversionInfo;
+    const {
+      frameCountedVideoStreamFrameRate,
+      frameCountedVideoStreamEstimatedTotalFrames,
+    } = this.conversionInfo;
 
     return new Promise((resolve) => {
       const ffmpeg = spawn(ffmpegBinaryPath, ffmpegArguments);
       ffmpeg.stdout.setEncoding("utf8");
 
       let roundedProgressPercentage = this.getRoundedProgressPercentage(0);
-      ffmpeg.stdout.on("data", (data) => {
-        const outTimeMicroseconds = data.match(/out_time_us=(.+)\n/)[1];
-        const speed = data.match(/speed=(.+)\n/)[1];
-
-        if (outTimeMicroseconds === "N/A" || speed === "N/A") {
+      ffmpeg.stdout.on("data", (data: string) => {
+        // in ffmpeg 7+, out_time and speed report the least-advanced output muxer,
+        // and the sparse srt output pins these values near zero
+        // => derive progress and speed frame / fps instead
+        const frameMatch = data.match(/frame=(\d+)\n/);
+        const fpsMatch = data.match(/fps=(\d+\.\d+)\n/);
+        if (
+          frameMatch === null ||
+          frameMatch[1] === undefined ||
+          fpsMatch === null ||
+          fpsMatch[1] === undefined
+        ) {
+          return;
+        }
+        const frame = Number.parseInt(frameMatch[1]);
+        const fps = Number.parseFloat(fpsMatch[1]);
+        if (fps === 0) {
           return;
         }
 
-        const outTimeSeconds = outTimeMicroseconds / 1e6;
-        const progress = outTimeSeconds / containerDurationSeconds;
+        const progress = Math.min(
+          frame / frameCountedVideoStreamEstimatedTotalFrames,
+          1,
+        );
         const newRoundedProgressPercentage =
           this.getRoundedProgressPercentage(progress);
-        if (newRoundedProgressPercentage !== roundedProgressPercentage) {
-          roundedProgressPercentage = newRoundedProgressPercentage;
-          this.logProgress(
-            currentFileIndex,
-            allFilesCount,
-            roundedProgressPercentage,
-            speed,
-          );
+        if (
+          newRoundedProgressPercentage === roundedProgressPercentage ||
+          newRoundedProgressPercentage === this.getRoundedProgressPercentage(1)
+        ) {
+          return;
         }
+        roundedProgressPercentage = newRoundedProgressPercentage;
+        this.logProgress(
+          currentFileIndex,
+          allFilesCount,
+          roundedProgressPercentage,
+          `${(fps / frameCountedVideoStreamFrameRate).toFixed(2)}x`,
+        );
       });
 
       let stderr = "";
@@ -247,6 +278,22 @@ export class Movie implements IMovie {
 
     const ffprobeOutput: FfProbeOutput = JSON.parse(stdout);
 
+    const [frameCountedVideoStream] = ffprobeOutput.streams
+      .filter((s) => s.codec_type === "video")
+      .filter((s) => s.disposition["attached_pic"] !== 1);
+    if (frameCountedVideoStream === undefined) {
+      throw new Error(`No video stream found in ${inputFilePath}`);
+    }
+
+    const frameCountedVideoStreamFrameRate =
+      this.parseFrameRate(frameCountedVideoStream.avg_frame_rate) ??
+      this.parseFrameRate(frameCountedVideoStream.r_frame_rate);
+    if (frameCountedVideoStreamFrameRate === undefined) {
+      throw new Error(
+        `Cannot determine video stream’s frame rate in ${inputFilePath}`,
+      );
+    }
+
     const audioStreams: AudioStream[] = ffprobeOutput.streams
       .filter((s) => s.codec_type === "audio")
       .map((s) => ({
@@ -276,9 +323,24 @@ export class Movie implements IMovie {
 
     return {
       containerDurationSeconds: ffprobeOutput.format.duration,
+      frameCountedVideoStreamFrameRate,
       audioStreams,
       subtitleStreams,
     };
+  }
+
+  private parseFrameRate(frameRateFraction: string): number | undefined {
+    const [numerator, denominator] = frameRateFraction
+      .split("/")
+      .map((f) => Number.parseInt(f));
+    if (numerator === undefined || denominator === undefined) {
+      return undefined;
+    }
+    const frameRate = numerator / denominator;
+    if (!Number.isFinite(frameRate) || frameRate <= 0) {
+      return undefined;
+    }
+    return frameRate;
   }
 
   private async selectAudioStream(
@@ -484,7 +546,7 @@ export class Movie implements IMovie {
     currentFileIndex: number,
     allFilesCount: number,
     progressPercentageRounded: string,
-    speed: number,
+    speed: string,
   ) {
     console.log(
       `[${currentFileIndex} / ${allFilesCount}] ${this.getFullyQualifiedName(

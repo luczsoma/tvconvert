@@ -1,6 +1,6 @@
 export interface FfProbeOutput {
   format: FfprobeFormat;
-  streams: (FfprobeAudioStream | FfprobeSubtitleStream)[];
+  streams: (FfprobeVideoStream | FfprobeAudioStream | FfprobeSubtitleStream)[];
 }
 
 export interface FfprobeFormat {
@@ -8,11 +8,17 @@ export interface FfprobeFormat {
 }
 
 export interface FfprobeStream {
-  codec_type: "audio" | "subtitle";
+  codec_type: "video" | "audio" | "subtitle";
   index: number;
   codec_name: string;
   disposition: FfprobeDispositionMap;
   tags: { [key: string]: string } | undefined;
+}
+
+export interface FfprobeVideoStream extends FfprobeStream {
+  codec_type: "video";
+  avg_frame_rate: string;
+  r_frame_rate: string;
 }
 
 export interface FfprobeAudioStream extends FfprobeStream {

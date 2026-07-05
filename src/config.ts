@@ -1,3 +1,4 @@
+import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { type IMovie, Movie } from "./movie.js";
 
@@ -41,6 +42,15 @@ export class Config {
       !existsSync(config.ffmpegBinaryPath)
     ) {
       throw new Error("config.ffmpegBinaryPath does not exist");
+    }
+
+    // progress reporting is based on the video frame counter,
+    // which ffmpeg <= 6 does not report for stream-copied video
+    const ffmpegMajorVersion = Config.getFfmpegMajorVersion(
+      config.ffmpegBinaryPath,
+    );
+    if (ffmpegMajorVersion === undefined || ffmpegMajorVersion < 7) {
+      throw new Error("config.ffmpegBinaryPath must be ffmpeg version 7+");
     }
 
     if (
@@ -103,5 +113,18 @@ export class Config {
     }
 
     return config;
+  }
+
+  private static getFfmpegMajorVersion(
+    ffmpegBinaryPath: string,
+  ): number | undefined {
+    const { stdout } = spawnSync(ffmpegBinaryPath, ["-version"], {
+      encoding: "utf8",
+    });
+    const versionMatch = stdout.match(/^ffmpeg version (\d+)\./);
+    if (versionMatch === null || versionMatch[1] === undefined) {
+      return undefined;
+    }
+    return Number.parseInt(versionMatch[1]);
   }
 }

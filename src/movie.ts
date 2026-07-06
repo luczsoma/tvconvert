@@ -181,7 +181,7 @@ export class Movie implements IMovie {
       ffmpeg.stdout.on("data", (data: string) => {
         // in ffmpeg 7+, out_time and speed report the least-advanced output muxer,
         // and the sparse srt output pins these values near zero
-        // => derive progress and speed frame / fps instead
+        // => derive progress and speed from frame and fps instead
         const frameMatch = data.match(/frame=(\d+)\n/);
         const fpsMatch = data.match(/fps=(\d+\.\d+)\n/);
         if (

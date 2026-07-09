@@ -1,11 +1,28 @@
 {
   "name": "tvconvert",
+  "version": "1.0.0",
+  "description": "Converts movie files into a format optimized for my home media setup",
+  "homepage": "https://github.com/luczsoma/tvconvert#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/luczsoma/tvconvert.git"
+  },
+  "license": "MIT",
+  "author": "Soma Lucz",
   "type": "module",
+  "private": true,
+  "bin": {
+    "tvconvert": "build/tvconvert.js"
+  },
   "scripts": {
     "build": "tsc"
   },
   "devDependencies": {
     "@types/node": "^24.13.2",
     "typescript": "^6.0.3"
+  },
+  "engines": {
+    "node": ">=22",
+    "npm": ">=10"
   }
 }

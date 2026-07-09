@@ -1,28 +1,27 @@
+#!/usr/bin/env node
+
 import { writeFileSync } from "node:fs";
 import { argv, exit } from "node:process";
 import { Config } from "./config.js";
 import { Movie } from "./movie.js";
 
 function printHelp(): void {
-  console.log("Read config from {configfile}.json:");
-  console.log("  tvconvert.sh -c {configfile}.json");
-  console.log("  tvconvert.sh --config {configfile}.json");
-  console.log("Print config skeleton into {configfile}.json:");
-  console.log("  tvconvert.sh -p {configfile}.json");
-  console.log("  tvconvert.sh --print-config {configfile}.json");
+  console.log("Usage:");
+  console.log("  tvconvert -c|--config <configfile>.json");
+  console.log("    Convert the movies listed in the given config file.");
+  console.log("  tvconvert -p|--print-config <configfile>.json");
+  console.log("    Write an example config skeleton into the given file.");
 }
 
 async function main() {
-  const args = argv.slice(2);
-  if (args.length !== 2) {
-    printHelp();
-    return 1;
-  }
+  const [mode, configFilePath, ...surplusArgs] = argv.slice(2);
 
-  const mode = args[0]!;
-  const configFilePath = args[1]!;
-
-  if (!["-c", "--config", "-p", "--print-config"].some((m) => m === mode)) {
+  if (
+    mode === undefined ||
+    configFilePath === undefined ||
+    !["-c", "--config", "-p", "--print-config"].some((m) => m === mode) ||
+    surplusArgs.length > 0
+  ) {
     printHelp();
     return 1;
   }
@@ -83,6 +82,5 @@ async function main() {
   return 0;
 }
 
-main().then((exitCode) => {
-  exit(exitCode);
-});
+const exitCode = await main();
+exit(exitCode);

@@ -1,3 +1,62 @@
 # tvconvert
 
-Converting movies to a format suitable my home setup.
+Converts movies into a format suitable for my home setup. For each configured movie, it produces:
+
+- an MKV with all original video, audio, and subtitle streams copied over (metadata and chapters stripped, stream titles normalized), plus an interactively selected audio stream transcoded into a loudness-normalized (`loudnorm=lra=10`) stereo AAC track (48 kHz, 256 kbps) as the new default audio track,
+- an SRT file extracted from an interactively selected SubRip subtitle stream, if the movie contains one.
+
+Movies with an embedded subtitle end up in the `ready/` subfolder of the output folder; movies without one end up in `external_subtitle_needed/`, each in its own `Title (Year)/` folder.
+
+## Requirements
+
+- Node.js 22+, npm 10+
+- ffmpeg 7+ and ffprobe
+
+## Install
+
+```sh
+git clone git@github.com:luczsoma/tvconvert.git
+cd tvconvert
+npm install
+npm run build
+```
+
+Optionally, put the `tvconvert` command on your `PATH`:
+
+```sh
+npm link
+```
+
+Without `npm link`, substitute `node build/tvconvert.js` for `tvconvert` below.
+
+## Usage
+
+1. Generate a config skeleton:
+
+   ```sh
+   tvconvert -p config.json
+   ```
+
+2. Edit `config.json`:
+
+   | Field               | Meaning                                                        |
+   | ------------------- | -------------------------------------------------------------- |
+   | `ffmpegBinaryPath`  | Absolute path to an ffmpeg 7+ binary                           |
+   | `ffprobeBinaryPath` | Absolute path to the matching ffprobe binary                   |
+   | `outputFolderPath`  | Existing folder where the converted movies are written         |
+   | `movies`            | List of `{ title, year, inputFilePath }` entries to convert    |
+   | `dryRun`            | If `true`, print the ffmpeg commands instead of executing them |
+
+3. Run the conversion:
+
+   ```sh
+   tvconvert -c config.json
+   ```
+
+   For every movie, the tool lists the available audio and subtitle streams and asks which audio stream to transcode and which subtitle stream to extract (leave the subtitle answer empty when using external subtitles). Conversions then run one after another, reporting progress like:
+
+   ```
+   [1 / 3] The Matrix (1999) [30.30% at 1.01x]
+   ```
+
+   A failed conversion does not stop the batch. After the whole batch has finished, each failed movie’s ffmpeg error output is printed, and the process exits with a non-zero code.

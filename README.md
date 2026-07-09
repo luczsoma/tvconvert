@@ -3,9 +3,22 @@
 Converts movies into a format suitable for my home setup. For each configured movie, it produces:
 
 - an MKV with all original video, audio, and subtitle streams copied over (metadata and chapters stripped, stream titles normalized), plus an interactively selected audio stream transcoded into a loudness-normalized (`loudnorm=lra=10`) stereo AAC track (48 kHz, 256 kbps) as the new default audio track,
-- an SRT file extracted from an interactively selected SubRip subtitle stream, if the movie contains one.
+- an SRT file extracted from an interactively selected SubRip subtitle stream, if the movie contains any.
 
-Movies with an embedded subtitle end up in the `ready/` subfolder of the output folder; movies without one end up in `external_subtitle_needed/`, each in its own `Title (Year)/` folder.
+Each movie is written into its own `Title (Year)/` folder inside the output folder, and lands under `ready/` or `external_subtitle_needed/` depending on where its subtitle comes from: `ready/` movies had their subtitle extracted from the movie file itself and are complete as-is, while `external_subtitle_needed/` movies carried no suitable embedded SubRip subtitle stream, so a matching SRT still has to be sourced separately:
+
+```
+<outputFolderPath>/
+├── ready/
+│   └── The Matrix (1999)/
+│       ├── The Matrix (1999).mkv
+│       └── The Matrix (1999).eng.srt
+└── external_subtitle_needed/
+    ├── The Matrix Reloaded (2003)/
+    │   └── The Matrix Reloaded (2003).mkv
+    └── The Matrix Revolutions (2003)/
+        └── The Matrix Revolutions (2003).mkv
+```
 
 ## Requirements
 
@@ -42,7 +55,7 @@ Without `npm link`, substitute `node build/tvconvert.js` for `tvconvert` below.
    | Field               | Meaning                                                        |
    | ------------------- | -------------------------------------------------------------- |
    | `ffmpegBinaryPath`  | Absolute path to an ffmpeg 7+ binary                           |
-   | `ffprobeBinaryPath` | Absolute path to the matching ffprobe binary                   |
+   | `ffprobeBinaryPath` | Absolute path to an ffprobe binary                             |
    | `outputFolderPath`  | Existing folder where the converted movies are written         |
    | `movies`            | List of `{ title, year, inputFilePath }` entries to convert    |
    | `dryRun`            | If `true`, print the ffmpeg commands instead of executing them |

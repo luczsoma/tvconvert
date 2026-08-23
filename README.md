@@ -30,7 +30,7 @@ Each movie is written into its own `Title (Year)/` folder inside the output fold
 ```sh
 git clone git@github.com:luczsoma/tvconvert.git
 cd tvconvert
-npm install
+npm ci
 npm run build
 ```
 

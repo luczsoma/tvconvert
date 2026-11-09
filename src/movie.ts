@@ -416,6 +416,11 @@ export class Movie implements IMovie {
       "-codec",
       "copy",
 
+      // drop video packets with no PTS (e.g. truncated last packet of a .ts)
+      // the Matroska muxer requires timestamps and aborts the job otherwise
+      "-bsf:v",
+      "noise=drop='eq(pts,nopts)'",
+
       // remove all metadata
       "-map_metadata",
       "-1",
